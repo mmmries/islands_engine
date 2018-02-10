@@ -50,4 +50,8 @@ defmodule IslandsEngine.IslandTest do
     {:hit, square} = Island.guess(square, Coordinate.new(2, 2) |> elem(1))
     assert Island.forested?(square) == true
   end
+
+  test "returning the valid island types" do
+    assert Island.types == [:atoll, :dot, :l_shape, :s_shape, :square]
+  end
 end

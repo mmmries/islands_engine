@@ -23,6 +23,8 @@ defmodule IslandsEngine.Island do
     not MapSet.disjoint?(island1.coordinates, island2.coordinates)
   end
 
+  def types, do: [:atoll, :dot, :l_shape, :s_shape, :square]
+
   defp add_coordinates(offsets, %Coordinate{row: row, col: col}) do
     Enum.reduce_while(offsets, MapSet.new(), fn {d_row, d_col}, coordinates ->
       case Coordinate.new(row + d_row, col + d_col) do
