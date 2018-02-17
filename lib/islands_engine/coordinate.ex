@@ -10,4 +10,11 @@ defmodule IslandsEngine.Coordinate do
   end
 
   def new(_, _), do: {:error, :invalid_coordinate}
+
+  def new!(row, col) do
+    case new(row, col) do
+      {:ok, coordinate} -> coordinate
+      {:error, detail} -> raise "Cannot create coordinate #{inspect detail}"
+    end
+  end
 end
