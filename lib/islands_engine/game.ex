@@ -36,11 +36,41 @@ defmodule IslandsEngine.Game do
          do: {:ok, %Game{game | rules: rules}}
   end
 
+  def make_guess(game, player, coordinate) do
+    with {:ok, key} <- lookup_player_key(game, player),
+         {:ok, rules} <- Rules.check(game.rules, {:guess_coordinate, key}),
+         game <- %Game{game | rules: rules},
+         do: guess(game, key, coordinate)
+  end
+
   defp all_islands_positioned?(board) do
     case Board.all_islands_positioned?(board) do
       true -> :ok
       false -> {:error, :not_all_islands_positioned}
     end
+  end
+
+  defp guess(game, :player1, coordinate) do
+    player = Map.fetch!(game, :player1)
+    opponent = Map.fetch!(game, :player2)
+    {hit_or_miss, forested, win_or_not, board} = Board.guess(opponent.board, coordinate)
+    guesses = Guesses.add(player.guesses, hit_or_miss, coordinate)
+    {:ok, rules} = Rules.check(game.rules, {:win_check, win_or_not})
+    game = %Game{game | player1: %{player | guesses: guesses},
+                        player2: %{opponent | board: board},
+                        rules: rules}
+    {:ok, game, hit_or_miss, forested, win_or_not}
+  end
+  defp guess(game, :player2, coordinate) do
+    player = Map.fetch!(game, :player2)
+    opponent = Map.fetch!(game, :player1)
+    {hit_or_miss, forested, win_or_not, board} = Board.guess(opponent.board, coordinate)
+    guesses = Guesses.add(player.guesses, hit_or_miss, coordinate)
+    {:ok, rules} = Rules.check(game.rules, {:win_check, win_or_not})
+    game = %Game{game | player2: %{player | guesses: guesses},
+                        player1: %{opponent | board: board},
+                        rules: rules}
+    {:ok, game, hit_or_miss, forested, win_or_not}
   end
 
   defp lookup_player_key(%Game{player1: %{name: name}}, name), do: {:ok, :player1}
