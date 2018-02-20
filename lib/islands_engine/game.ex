@@ -36,7 +36,7 @@ defmodule IslandsEngine.Game do
          do: {:ok, %Game{game | rules: rules}}
   end
 
-  def make_guess(game, player, coordinate) do
+  def guess_coordinate(game, player, coordinate) do
     with {:ok, key} <- lookup_player_key(game, player),
          {:ok, rules} <- Rules.check(game.rules, {:guess_coordinate, key}),
          game <- %Game{game | rules: rules},
