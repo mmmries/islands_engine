@@ -53,4 +53,12 @@ defmodule IslandsEngine.GameServerTest do
     {:ok, :miss, :none, :no_win} = GameServer.guess_coordinate(game, "Jim", Coordinate.new!(9,9))
     {:ok, :hit, :s_shape, :win} = GameServer.guess_coordinate(game, "Allie", Coordinate.new!(3,4))
   end
+
+  test "games can be addressed by the first player's name" do
+    {:ok, _game} = GameServer.start_link("Ron")
+    assert :ok = GameServer.join("Ron", "Burt")
+    assert :ok = GameServer.position_island("Ron", "Burt", :dot, Coordinate.new!(2,1))
+    assert :ok = GameServer.position_island("Ron", "Burt", :atoll, Coordinate.new!(1,1))
+    assert :ok = GameServer.position_island("Ron", "Burt", :square, Coordinate.new!(4,1))
+  end
 end

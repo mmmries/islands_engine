@@ -3,23 +3,30 @@ defmodule IslandsEngine.GameServer do
   alias IslandsEngine.{Coordinate,Game}
 
   def start_link(player1_name) when is_binary(player1_name) do
-    GenServer.start_link(__MODULE__, player1_name)
+    GenServer.start_link(__MODULE__, player1_name, name: via_tuple(player1_name))
   end
 
   def join(server, name) when is_binary(name) do
-    GenServer.call(server, {:join, name})
+    call(server, {:join, name})
   end
 
   def position_island(server, name, type, %Coordinate{}=top_left) when is_binary(name) and is_atom(type) do
-    GenServer.call(server, {:position_island, name, type, top_left})
+    call(server, {:position_island, name, type, top_left})
   end
 
   def set_islands(server, name) when is_binary(name) do
-    GenServer.call(server, {:set_islands, name})
+    call(server, {:set_islands, name})
   end
 
   def guess_coordinate(server, name, %Coordinate{}=coordinate) when is_binary(name) do
-    GenServer.call(server, {:guess_coordinate, name, coordinate})
+    call(server, {:guess_coordinate, name, coordinate})
+  end
+
+  defp call(game_name, message) when is_binary(game_name) do
+    call(via_tuple(game_name), message)
+  end
+  defp call(server, message) do
+    GenServer.call(server, message)
   end
 
   # Callbacks
@@ -50,4 +57,6 @@ defmodule IslandsEngine.GameServer do
   defp reply_response({:ok, game, hit_or_miss, forested, win_or_not}, _), do: {:reply, {:ok, hit_or_miss, forested, win_or_not}, game}
   defp reply_response(:error, game), do: {:reply, :error, game}
   defp reply_response({:error, reason}, game), do: {:reply, {:error, reason}, game}
+
+  defp via_tuple(name), do: {:via, Registry, {Registry.Game, name}}
 end
