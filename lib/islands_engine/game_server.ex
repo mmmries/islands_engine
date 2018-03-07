@@ -1,6 +1,8 @@
 defmodule IslandsEngine.GameServer do
-  use GenServer
+  use GenServer, restart: :transient, start: {__MODULE__, :start_link, []}
   alias IslandsEngine.{Coordinate,Game}
+  require Logger
+  @timeout 60_000
 
   def start_link(player1_name) when is_binary(player1_name) do
     GenServer.start_link(__MODULE__, player1_name, name: via_tuple(player1_name))
@@ -22,6 +24,8 @@ defmodule IslandsEngine.GameServer do
     call(server, {:guess_coordinate, name, coordinate})
   end
 
+  def via_tuple(name), do: {:via, Registry, {Registry.Game, name}}
+
   defp call(game_name, message) when is_binary(game_name) do
     call(via_tuple(game_name), message)
   end
@@ -32,7 +36,7 @@ defmodule IslandsEngine.GameServer do
   # Callbacks
 
   def init(player1_name) do
-    {:ok, Game.start(player1_name)}
+    {:ok, Game.start(player1_name), @timeout}
   end
 
   def handle_call({:join, name}, _from, game) do
@@ -51,12 +55,18 @@ defmodule IslandsEngine.GameServer do
     game |> Game.guess_coordinate(name, coordinate) |> reply_response(game)
   end
 
+  def handle_info(:timeout, state) do
+    {:stop, {:shutdown, :timeout}, state}
+  end
+  def handle_info(other, state) do
+    Logger.error("#{__MODULE__} received unexpected message in handle_info #{inspect(other)}")
+    {:ok, state, @timeout}
+  end
+
   # Private Functions
 
-  defp reply_response({:ok, game}, _), do: {:reply, :ok, game}
-  defp reply_response({:ok, game, hit_or_miss, forested, win_or_not}, _), do: {:reply, {:ok, hit_or_miss, forested, win_or_not}, game}
-  defp reply_response(:error, game), do: {:reply, :error, game}
-  defp reply_response({:error, reason}, game), do: {:reply, {:error, reason}, game}
-
-  defp via_tuple(name), do: {:via, Registry, {Registry.Game, name}}
+  defp reply_response({:ok, game}, _), do: {:reply, :ok, game, @timeout}
+  defp reply_response({:ok, game, hit_or_miss, forested, win_or_not}, _), do: {:reply, {:ok, hit_or_miss, forested, win_or_not}, game, @timeout}
+  defp reply_response(:error, game), do: {:reply, :error, game, @timeout}
+  defp reply_response({:error, reason}, game), do: {:reply, {:error, reason}, game, @timeout}
 end
