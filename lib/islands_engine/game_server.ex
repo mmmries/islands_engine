@@ -1,5 +1,5 @@
 defmodule IslandsEngine.GameServer do
-  use GenServer, restart: :transient, start: {__MODULE__, :start_link, []}
+  use GenServer, restart: :transient
   alias IslandsEngine.{Coordinate,Game}
   require Logger
   @timeout 60_000
