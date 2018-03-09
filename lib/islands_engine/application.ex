@@ -5,6 +5,8 @@ defmodule IslandsEngine.Application do
   alias IslandsEngine.GameSupervisor
 
   def start(_type, _args) do
+    :game_state = :ets.new(:game_state, [:public, :named_table])
+
     # List all child processes to be supervised
     children = [
       {Registry, keys: :unique, name: Registry.Game},

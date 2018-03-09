@@ -1,0 +1,4 @@
+alias IslandsEngine.Coordinate
+alias IslandsEngine.Game
+alias IslandsEngine.GameServer
+alias IslandsEngine.GameSupervisor

@@ -36,7 +36,11 @@ defmodule IslandsEngine.GameServer do
   # Callbacks
 
   def init(player1_name) do
-    {:ok, Game.start(player1_name), @timeout}
+    game = case :ets.lookup(:game_state, player1_name) do
+      [] -> Game.start(player1_name)
+      [{_key, game}] -> game
+    end
+    {:ok, game, @timeout}
   end
 
   def handle_call({:join, name}, _from, game) do
@@ -65,8 +69,18 @@ defmodule IslandsEngine.GameServer do
 
   # Private Functions
 
-  defp reply_response({:ok, game}, _), do: {:reply, :ok, game, @timeout}
-  defp reply_response({:ok, game, hit_or_miss, forested, win_or_not}, _), do: {:reply, {:ok, hit_or_miss, forested, win_or_not}, game, @timeout}
+  defp reply_response({:ok, game}, _) do
+    store_game_state(game)
+    {:reply, :ok, game, @timeout}
+  end
+  defp reply_response({:ok, game, hit_or_miss, forested, win_or_not}, _) do
+    store_game_state(game)
+    {:reply, {:ok, hit_or_miss, forested, win_or_not}, game, @timeout}
+  end
   defp reply_response(:error, game), do: {:reply, :error, game, @timeout}
   defp reply_response({:error, reason}, game), do: {:reply, {:error, reason}, game, @timeout}
+
+  defp store_game_state(game) do
+    :ets.insert(:game_state, {game.player1.name, game})
+  end
 end
