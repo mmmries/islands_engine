@@ -67,6 +67,12 @@ defmodule IslandsEngine.GameServer do
     {:ok, state, @timeout}
   end
 
+  def terminate({:shutdown, :timeout}, game) do
+    :ets.delete(:game_state, game.player1.name)
+    :ok
+  end
+  def terminate(_, _game), do: :ok
+
   # Private Functions
 
   defp reply_response({:ok, game}, _) do
